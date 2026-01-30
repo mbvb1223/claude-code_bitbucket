@@ -28,28 +28,26 @@ export interface Config {
  * Load configuration from environment variables
  */
 export function loadConfig(): Config {
-  const config: Config = {
-    // Bitbucket (from pipeline environment)
-    workspace: env("BITBUCKET_WORKSPACE"),
-    repoSlug: env("BITBUCKET_REPO_SLUG"),
-    prId: optionalInt("BITBUCKET_PR_ID"),
-    destinationBranch: env("BITBUCKET_PR_DESTINATION_BRANCH", "main"),
+    return {
+      // Bitbucket (from pipeline environment)
+      workspace: env("BITBUCKET_WORKSPACE"),
+      repoSlug: env("BITBUCKET_REPO_SLUG"),
+      prId: optionalInt("BITBUCKET_PR_ID"),
+      destinationBranch: env("BITBUCKET_PR_DESTINATION_BRANCH", "main"),
 
-    // Authentication
-    bitbucketToken: env("BITBUCKET_ACCESS_TOKEN", ""),
-    anthropicApiKey: env("ANTHROPIC_API_KEY", ""),
+      // Authentication
+      bitbucketToken: env("BITBUCKET_ACCESS_TOKEN", ""),
+      anthropicApiKey: env("ANTHROPIC_API_KEY", ""),
 
-    // Mode
-    mode: env("MODE", "review") as "review" | "tag",
-    triggerPhrase: env("TRIGGER_PHRASE", "@claude"),
+      // Mode
+      mode: env("MODE", "review") as "review" | "tag",
+      triggerPhrase: env("TRIGGER_PHRASE", "@claude"),
 
-    // Optional settings
-    model: env("MODEL", "sonnet"),
-    maxTurns: parseInt(env("MAX_TURNS", "30")),
-    verbose: env("VERBOSE", "false") === "true",
+      // Optional settings
+      model: env("MODEL", "sonnet"),
+      maxTurns: parseInt(env("MAX_TURNS", "30")),
+      verbose: env("VERBOSE", "false") === "true",
   };
-
-  return config;
 }
 
 /**
@@ -72,7 +70,7 @@ export function validateConfig(config: Config): string[] {
 
   // Warning (not error) if no Bitbucket token
   if (!config.bitbucketToken) {
-    console.warn("[WARN] BITBUCKET_ACCESS_TOKEN not set - cannot post comments to PR");
+    errors.push("[WARN] BITBUCKET_ACCESS_TOKEN not set - cannot post comments to PR");
   }
 
   return errors;

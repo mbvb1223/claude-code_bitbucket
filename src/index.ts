@@ -47,10 +47,37 @@ async function main(): Promise<void> {
   }
 
   logger.success("Configuration valid!");
-  process.exit(0);
 
-  // TODO Step 4: Create Bitbucket client
-  // const client = new BitbucketClient(config);
+  // Step 4: Create Bitbucket client and test connection
+  const client = new BitbucketClient(config);
+
+  if (config.prId) {
+    logger.info(`Testing Bitbucket API - fetching PR #${config.prId}...`);
+
+    const pr = await client.getPullRequest(config.prId);
+    if (pr) {
+      logger.success(`PR found: "${pr.title}"`);
+      logger.info(`  Author: ${pr.author?.display_name || "unknown"}`);
+      logger.info(`  Branch: ${pr.source?.branch?.name} → ${pr.destination?.branch?.name}`);
+      logger.info(`  State: ${pr.state}`);
+    } else {
+      logger.warn("Could not fetch PR details (check token permissions)");
+    }
+
+    // Also test fetching diff
+    logger.info("Testing diff fetch...");
+    const diff = await client.getPullRequestDiff(config.prId);
+    if (diff) {
+      logger.success(`Diff fetched: ${diff.length} characters`);
+    } else {
+      logger.warn("Could not fetch diff");
+    }
+  } else {
+    logger.info("No PR ID provided - skipping Bitbucket API test");
+  }
+
+  logger.success("Step 4 complete!");
+  process.exit(0);
 
   // TODO Step 5: Run appropriate mode
   // if (config.mode === "review") { ... }
