@@ -26,69 +26,35 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  logger.success("Setup complete!");
+  // Step 2: Load configuration from environment variables
+  const config = loadConfig();
+  setVerbose(config.verbose);
+
+  logger.info(`Mode: ${config.mode}`);
+  logger.info(`Workspace: ${config.workspace || "(not set)"}`);
+  logger.info(`Repo: ${config.repoSlug || "(not set)"}`);
+  logger.info(`PR ID: ${config.prId || "(not set)"}`);
+  logger.info(`Trigger: ${config.triggerPhrase}`);
+
+  // Step 3: Validate required configuration
+  const errors = validateConfig(config);
+  if (errors.length > 0) {
+    logger.error("Configuration errors:");
+    for (const error of errors) {
+      logger.error(`  - ${error}`);
+    }
+    process.exit(1);
+  }
+
+  logger.success("Configuration valid!");
   process.exit(0);
 
-  // // 1. Load configuration
-  // const config = loadConfig();
-  // setVerbose(config.verbose);
-  //
-  // logger.info(`Mode: ${config.mode}`);
-  // logger.info(`Workspace: ${config.workspace}/${config.repoSlug}`);
-  // if (config.prId) {
-  //   logger.info(`PR: #${config.prId}`);
-  // }
-  //
-  // // 2. Validate configuration
-  // const errors = validateConfig(config);
-  // if (errors.length > 0) {
-  //   for (const error of errors) {
-  //     logger.error(error);
-  //   }
-  //   process.exit(1);
-  // }
-  //
-  // // 3. Create Bitbucket client
+  // TODO Step 4: Create Bitbucket client
   // const client = new BitbucketClient(config);
-  //
-  // // 4. Run appropriate mode
-  // try {
-  //   if (config.mode === "review" && shouldRunReview(config)) {
-  //     const result = await runReviewMode(config, client);
-  //
-  //     if (!result.success) {
-  //       logger.error("Review mode failed:", result.error);
-  //       process.exit(1);
-  //     }
-  //
-  //     if (result.reviewPosted) {
-  //       logger.success("Review completed and posted!");
-  //     } else {
-  //       logger.info("Review completed (no comment posted)");
-  //     }
-  //   } else if (config.mode === "tag" && shouldRunTag(config)) {
-  //     const result = await runTagMode(config, client);
-  //
-  //     if (!result.success) {
-  //       logger.error("Tag mode failed:", result.error);
-  //       process.exit(1);
-  //     }
-  //
-  //     if (result.responded) {
-  //       logger.success(`Responded to comment #${result.commentId}`);
-  //     } else {
-  //       logger.info("No trigger comments to respond to");
-  //     }
-  //   } else {
-  //     logger.info("No action needed for current configuration");
-  //   }
-  //
-  //   logger.success("Done!");
-  //   process.exit(0);
-  // } catch (error) {
-  //   logger.error("Fatal error:", error);
-  //   process.exit(1);
-  // }
+
+  // TODO Step 5: Run appropriate mode
+  // if (config.mode === "review") { ... }
+  // if (config.mode === "tag") { ... }
 }
 
 // Run
