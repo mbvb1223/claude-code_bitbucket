@@ -17,7 +17,7 @@ import { shouldRunTag, runTagMode } from "./modes/tag";
 
 async function main(): Promise<void> {
   logger.info("Claude Bitbucket Review starting...");
-  process.exit(1);
+  process.exit(0);
 
   // // 1. Load configuration
   // const config = loadConfig();
