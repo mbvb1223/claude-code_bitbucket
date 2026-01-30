@@ -58,12 +58,21 @@ export class BitbucketClient {
     this.config = config;
 
     // Build auth header from token
-    // Supports: username:app_password or x-token-auth:token
+    // Format: username:app_password (will be base64 encoded)
     if (config.bitbucketToken) {
-      const base64 = Buffer.from(config.bitbucketToken).toString("base64");
-      this.authHeader = `Basic ${base64}`;
+      // Check if token contains colon (username:password format)
+      if (config.bitbucketToken.includes(":")) {
+        const base64 = Buffer.from(config.bitbucketToken).toString("base64");
+        this.authHeader = `Basic ${base64}`;
+        logger.debug(`Auth: Basic auth with username:password format`);
+      } else {
+        // Assume it's a Bearer token
+        this.authHeader = `Bearer ${config.bitbucketToken}`;
+        logger.debug(`Auth: Bearer token format`);
+      }
     } else {
       this.authHeader = "";
+      logger.debug("Auth: No token provided");
     }
   }
 
