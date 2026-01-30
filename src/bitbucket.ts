@@ -58,17 +58,24 @@ export class BitbucketClient {
     this.config = config;
 
     // Build auth header from token
-    // Format: username:app_password (will be base64 encoded)
+    // Bitbucket API tokens (ATCTT3x...) use Bearer auth
+    // Legacy app passwords use Basic auth (username:password)
     if (config.bitbucketToken) {
-      // Check if token contains colon (username:password format)
-      if (config.bitbucketToken.includes(":")) {
-        const base64 = Buffer.from(config.bitbucketToken).toString("base64");
+      const token = config.bitbucketToken.trim();
+
+      if (token.startsWith("ATCTT") || token.startsWith("ATBB")) {
+        // New Bitbucket API token format - use Bearer
+        this.authHeader = `Bearer ${token}`;
+        logger.debug("Auth: Bitbucket API token (Bearer)");
+      } else if (token.includes(":")) {
+        // Legacy format: username:app_password or x-token-auth:token
+        const base64 = Buffer.from(token).toString("base64");
         this.authHeader = `Basic ${base64}`;
-        logger.debug(`Auth: Basic auth with username:password format`);
+        logger.debug("Auth: Basic auth (username:password)");
       } else {
-        // Assume it's a Bearer token
-        this.authHeader = `Bearer ${config.bitbucketToken}`;
-        logger.debug(`Auth: Bearer token format`);
+        // Unknown format - try Bearer
+        this.authHeader = `Bearer ${token}`;
+        logger.debug("Auth: Unknown token format, trying Bearer");
       }
     } else {
       this.authHeader = "";
