@@ -48,32 +48,16 @@ async function main(): Promise<void> {
 
   logger.success("Configuration valid!");
 
-  // Step 4: Create Bitbucket client and test connection
+  // Step 4: Create Bitbucket client (for posting comments)
   const client = new BitbucketClient(config);
 
-  if (config.prId) {
-    logger.info(`Testing Bitbucket API - fetching PR #${config.prId}...`);
-
-    const pr = await client.getPullRequest(config.prId);
-    if (pr) {
-      logger.success(`PR found: "${pr.title}"`);
-      logger.info(`  Author: ${pr.author?.display_name || "unknown"}`);
-      logger.info(`  Branch: ${pr.source?.branch?.name} → ${pr.destination?.branch?.name}`);
-      logger.info(`  State: ${pr.state}`);
-    } else {
-      logger.warn("Could not fetch PR details (check token permissions)");
-    }
-
-    // Also test fetching diff
-    logger.info("Testing diff fetch...");
-    const diff = await client.getPullRequestDiff(config.prId);
-    if (diff) {
-      logger.success(`Diff fetched: ${diff.length} characters`);
-    } else {
-      logger.warn("Could not fetch diff");
-    }
+  // Test git access
+  const { getChangedFiles } = await import("./utils/git");
+  const changedFiles = getChangedFiles(config.destinationBranch);
+  if (changedFiles.length > 0) {
+    logger.info(`Found ${changedFiles.length} changed files via git`);
   } else {
-    logger.info("No PR ID provided - skipping Bitbucket API test");
+    logger.warn("No changed files found (or git diff failed)");
   }
 
   logger.success("Setup complete!");

@@ -8,6 +8,7 @@ import type { Config } from "../config";
 import type { BitbucketClient, PullRequest } from "../bitbucket";
 import { runClaude } from "../claude";
 import { logger } from "../logger";
+import { getLocalDiff, getChangedFiles } from "../utils/git";
 
 export interface ReviewResult {
   success: boolean;
@@ -41,21 +42,28 @@ export async function runReviewMode(
     return { success: false, reviewPosted: false, error: "No PR ID" };
   }
 
-  // 1. Get PR details
-  const pr = await client.getPullRequest(config.prId);
-  if (!pr) {
-    // Use fallback from environment
-    logger.warn("Could not fetch PR details, using environment variables");
+  // 1. Get PR details (optional - for metadata only)
+  let pr: PullRequest | null = null;
+  if (config.bitbucketToken) {
+    pr = await client.getPullRequest(config.prId);
+    if (!pr) {
+      logger.warn("Could not fetch PR details, using environment variables");
+    }
   }
 
-  // 2. Get PR diff
-  logger.info("Fetching PR diff...");
-  const diff = await client.getPullRequestDiff(config.prId);
+  // 2. Get diff using local git (no API call needed!)
+  logger.info("Getting diff from local git...");
+  const changedFiles = getChangedFiles(config.destinationBranch);
+  logger.info(`Changed files: ${changedFiles.length}`);
+
+  const diff = getLocalDiff(config.destinationBranch);
 
   if (!diff) {
-    logger.warn("No diff found for PR");
+    logger.warn("No diff found");
     return { success: true, reviewPosted: false, error: "No diff" };
   }
+
+  logger.info(`Diff size: ${diff.length} characters`);
 
   // 3. Build review prompt
   const prompt = buildReviewPrompt(config, pr, diff);
@@ -129,26 +137,21 @@ function buildReviewPrompt(
 ${description || "No description provided"}
 
 ## Your Task
-Review the code changes in this PR. Provide constructive feedback covering:
+Review the code changes in this PR. Provide constructive feedback.
 
-### 1. Code Quality
-- Readability and maintainability
-- Naming conventions
-- Code organization
+**Important:** You have access to the full codebase. Use the Read, Grep, and Glob tools to:
+- Read related files to understand context
+- Check how changed code interacts with other parts
+- Verify imports, function calls, and dependencies
+- Look for similar patterns in the codebase
 
-### 2. Bugs & Logic
-- Potential bugs or logic errors
-- Edge cases not handled
-- Error handling
+### Review Areas
 
-### 3. Security
-- Security vulnerabilities
-- Input validation
-- Sensitive data exposure
-
-### 4. Performance
-- Inefficient code patterns
-- Unnecessary operations
+1. **Code Quality** - Readability, naming, organization
+2. **Bugs & Logic** - Errors, edge cases, error handling
+3. **Security** - Vulnerabilities, input validation, sensitive data
+4. **Performance** - Inefficient patterns, unnecessary operations
+5. **Compatibility** - Does it break existing code? Are imports correct?
 
 ## Format
 For each issue found:
