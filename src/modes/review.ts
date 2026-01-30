@@ -71,6 +71,18 @@ export async function runReviewMode(
     return { success: false, reviewPosted: false, error: result.error };
   }
 
+  // Log usage/cost information
+  if (result.usage) {
+    logger.info("--- Claude Usage ---");
+    logger.info(`  Input tokens:  ${result.usage.inputTokens.toLocaleString()}`);
+    logger.info(`  Output tokens: ${result.usage.outputTokens.toLocaleString()}`);
+    logger.info(`  Total tokens:  ${result.usage.totalTokens.toLocaleString()}`);
+    if (result.usage.costUsd !== undefined) {
+      logger.info(`  Cost:          $${result.usage.costUsd.toFixed(4)}`);
+    }
+    logger.info("--------------------");
+  }
+
   // 5. Post review comment
   if (result.output && config.bitbucketToken) {
     const comment = formatReviewComment(result.output);

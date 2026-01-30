@@ -7,10 +7,18 @@ import { spawn } from "child_process";
 import type { Config } from "./config";
 import { logger } from "./logger";
 
+export interface ClaudeUsage {
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  costUsd?: number;
+}
+
 export interface ClaudeResult {
   success: boolean;
   output: string;
   error?: string;
+  usage?: ClaudeUsage;
 }
 
 /**
@@ -33,9 +41,10 @@ export async function runClaude(
   logger.info("Running Claude CLI...");
 
   // Build command arguments
+  // Use JSON output to capture usage/cost information
   const args: string[] = [
     "-p",                         // Print mode (non-interactive)
-    "--output-format", "text",    // Simple text output (easier to parse)
+    "--output-format", "json",    // JSON output includes usage info
     "--model", config.model,
     "--max-turns", config.maxTurns.toString(),
   ];
@@ -87,9 +96,13 @@ export async function runClaude(
       logger.info(`Claude exited with code: ${code}`);
 
       if (code === 0) {
+        // Parse JSON output to extract text and usage
+        const { text, usage } = parseClaudeJsonOutput(stdout);
+
         resolve({
           success: true,
-          output: stdout.trim(),
+          output: text,
+          usage,
         });
       } else {
         resolve({
@@ -110,6 +123,41 @@ export async function runClaude(
       });
     });
   });
+}
+
+/**
+ * Parse Claude CLI JSON output to extract text and usage
+ */
+function parseClaudeJsonOutput(output: string): { text: string; usage?: ClaudeUsage } {
+  try {
+    const json = JSON.parse(output.trim());
+
+    // Extract text from result
+    let text = "";
+    if (typeof json.result === "string") {
+      text = json.result;
+    } else if (json.result?.text) {
+      text = json.result.text;
+    }
+
+    // Extract usage information
+    let usage: ClaudeUsage | undefined;
+    if (json.usage || json.cost_usd !== undefined) {
+      usage = {
+        inputTokens: json.usage?.input_tokens || json.input_tokens || 0,
+        outputTokens: json.usage?.output_tokens || json.output_tokens || 0,
+        totalTokens: (json.usage?.input_tokens || json.input_tokens || 0) +
+                     (json.usage?.output_tokens || json.output_tokens || 0),
+        costUsd: json.cost_usd,
+      };
+    }
+
+    return { text, usage };
+  } catch {
+    // If JSON parsing fails, return raw output as text
+    logger.debug("Failed to parse JSON output, using raw text");
+    return { text: output.trim() };
+  }
 }
 
 /**

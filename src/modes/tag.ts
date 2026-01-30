@@ -105,6 +105,18 @@ export async function runTagMode(
     return { success: false, responded: false, error: result.error };
   }
 
+  // Log usage/cost information
+  if (result.usage) {
+    logger.info("--- Claude Usage ---");
+    logger.info(`  Input tokens:  ${result.usage.inputTokens.toLocaleString()}`);
+    logger.info(`  Output tokens: ${result.usage.outputTokens.toLocaleString()}`);
+    logger.info(`  Total tokens:  ${result.usage.totalTokens.toLocaleString()}`);
+    if (result.usage.costUsd !== undefined) {
+      logger.info(`  Cost:          $${result.usage.costUsd.toFixed(4)}`);
+    }
+    logger.info("--------------------");
+  }
+
   // 7. Post response as reply to the trigger comment
   if (result.output && config.bitbucketToken) {
     const reply = await client.replyToComment(
