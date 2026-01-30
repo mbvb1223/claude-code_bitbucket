@@ -79,6 +79,19 @@ export async function runReviewMode(
     return { success: false, reviewPosted: false, error: result.error };
   }
 
+  // Debug logging for Claude output
+  logger.debug(`Claude output length: ${result.output?.length || 0}`);
+  logger.debug(`Claude output preview: ${result.output?.substring(0, 200) || "(empty)"}`);
+
+  // Show full output to console for debugging
+  if (result.output) {
+    console.log("\n=== REVIEW OUTPUT ===");
+    console.log(result.output);
+    console.log("=== END OUTPUT ===\n");
+  } else {
+    logger.warn("Claude returned empty output");
+  }
+
   // Log usage/cost information
   if (result.usage) {
     logger.info("--- Claude Usage ---");

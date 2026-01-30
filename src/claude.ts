@@ -129,8 +129,13 @@ export async function runClaude(
  * Parse Claude CLI JSON output to extract text and usage
  */
 function parseClaudeJsonOutput(output: string): { text: string; usage?: ClaudeUsage } {
+  // Add debug logging
+  logger.debug(`Raw Claude output length: ${output.length}`);
+  logger.debug(`Raw Claude output (first 500 chars): ${output.substring(0, 500)}`);
+
   try {
     const json = JSON.parse(output.trim());
+    logger.debug(`Parsed JSON keys: ${Object.keys(json).join(", ")}`);
 
     // Extract text from result
     let text = "";
@@ -139,6 +144,8 @@ function parseClaudeJsonOutput(output: string): { text: string; usage?: ClaudeUs
     } else if (json.result?.text) {
       text = json.result.text;
     }
+
+    logger.debug(`Extracted text length: ${text.length}`);
 
     // Extract usage information
     let usage: ClaudeUsage | undefined;
@@ -153,9 +160,10 @@ function parseClaudeJsonOutput(output: string): { text: string; usage?: ClaudeUs
     }
 
     return { text, usage };
-  } catch {
+  } catch (error) {
     // If JSON parsing fails, return raw output as text
-    logger.debug("Failed to parse JSON output, using raw text");
+    logger.debug(`Failed to parse JSON output: ${error}`);
+    logger.debug("Using raw text instead");
     return { text: output.trim() };
   }
 }
