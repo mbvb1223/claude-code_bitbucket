@@ -44,7 +44,7 @@ export function loadConfig(): Config {
       triggerPhrase: env("TRIGGER_PHRASE", "@claude"),
 
       // Optional settings
-      model: env("MODEL", "sonnet"),
+      model: env("MODEL", "haiku"),
       maxTurns: parseInt(env("MAX_TURNS", "30")),
       verbose: env("VERBOSE", "false") === "true",
   };
