@@ -76,31 +76,64 @@ async function main(): Promise<void> {
     logger.info("No PR ID provided - skipping Bitbucket API test");
   }
 
-  logger.success("Step 4 complete!");
+  logger.success("Setup complete!");
 
-  // Step 5: Test Claude CLI with a simple prompt
-  logger.info("Testing Claude CLI...");
+  // Step 5: Run appropriate mode
+  try {
+    if (config.mode === "review") {
+      // Review mode: automatically review the PR
+      if (!shouldRunReview(config)) {
+        logger.info("Review mode skipped (no PR ID)");
+        process.exit(0);
+      }
 
-  const { runClaude } = await import("./claude");
+      logger.info("Running review mode...");
+      const result = await runReviewMode(config, client);
 
-  const testResult = await runClaude(config, "Say 'Hello from Claude!' in exactly 5 words.", {
-    allowedTools: [], // No tools for this test
-  });
+      if (!result.success) {
+        logger.error("Review failed:", result.error);
+        process.exit(1);
+      }
 
-  if (testResult.success) {
-    logger.success("Claude CLI working!");
-    logger.info(`Response: ${testResult.output}`);
-  } else {
-    logger.error("Claude CLI failed:", testResult.error);
+      if (result.reviewPosted) {
+        logger.success("Review completed and posted to PR!");
+      } else {
+        logger.info("Review completed (no comment posted)");
+      }
+
+    } else if (config.mode === "tag") {
+      // Tag mode: respond to @claude mentions
+      if (!shouldRunTag(config)) {
+        logger.info("Tag mode skipped (no PR ID)");
+        process.exit(0);
+      }
+
+      logger.info("Running tag mode...");
+      const result = await runTagMode(config, client);
+
+      if (!result.success) {
+        logger.error("Tag mode failed:", result.error);
+        process.exit(1);
+      }
+
+      if (result.responded) {
+        logger.success(`Responded to comment #${result.commentId}`);
+      } else {
+        logger.info("No @claude mentions to respond to");
+      }
+
+    } else {
+      logger.error(`Unknown mode: ${config.mode}`);
+      process.exit(1);
+    }
+
+    logger.success("Done!");
+    process.exit(0);
+
+  } catch (error) {
+    logger.error("Fatal error:", error);
     process.exit(1);
   }
-
-  logger.success("All steps complete! Ready to run modes.");
-  process.exit(0);
-
-  // TODO Step 6: Run appropriate mode
-  // if (config.mode === "review") { ... }
-  // if (config.mode === "tag") { ... }
 }
 
 // Run
