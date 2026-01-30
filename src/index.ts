@@ -77,9 +77,28 @@ async function main(): Promise<void> {
   }
 
   logger.success("Step 4 complete!");
+
+  // Step 5: Test Claude CLI with a simple prompt
+  logger.info("Testing Claude CLI...");
+
+  const { runClaude } = await import("./claude");
+
+  const testResult = await runClaude(config, "Say 'Hello from Claude!' in exactly 5 words.", {
+    allowedTools: [], // No tools for this test
+  });
+
+  if (testResult.success) {
+    logger.success("Claude CLI working!");
+    logger.info(`Response: ${testResult.output}`);
+  } else {
+    logger.error("Claude CLI failed:", testResult.error);
+    process.exit(1);
+  }
+
+  logger.success("All steps complete! Ready to run modes.");
   process.exit(0);
 
-  // TODO Step 5: Run appropriate mode
+  // TODO Step 6: Run appropriate mode
   // if (config.mode === "review") { ... }
   // if (config.mode === "tag") { ... }
 }
