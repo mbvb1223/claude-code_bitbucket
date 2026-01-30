@@ -133,54 +133,24 @@ function buildReviewPrompt(
   pr: PullRequest | null,
   diff: string
 ): string {
-  const title = pr?.title || process.env.BITBUCKET_PR_TITLE || "Pull Request";
-  const description = pr?.description || process.env.BITBUCKET_PR_DESCRIPTION || "";
-  const sourceBranch = pr?.source?.branch?.name || process.env.BITBUCKET_BRANCH || "unknown";
+  const title = pr?.title || process.env.BITBUCKET_PR_TITLE || "PR";
+  const sourceBranch = pr?.source?.branch?.name || process.env.BITBUCKET_BRANCH || "";
   const destBranch = pr?.destination?.branch?.name || config.destinationBranch;
-  const author = pr?.author?.display_name || "unknown";
 
-  return `
-# Pull Request Review
+  return `Review this PR. Be concise - bullet points only.
 
-**Title:** ${title}
-**Author:** ${author}
-**Branch:** ${sourceBranch} → ${destBranch}
+**${title}** (${sourceBranch} → ${destBranch})
 
-## Description
-${description || "No description provided"}
+Check for: bugs, security issues, logic errors. Skip style nits.
 
-## Your Task
-Review the code changes in this PR. Provide constructive feedback.
+Format: 🔴 Critical | 🟡 Important | 🟢 Minor
+- File:line - Issue - Fix
 
-**Important:** You have access to the full codebase. Use the Read, Grep, and Glob tools to:
-- Read related files to understand context
-- Check how changed code interacts with other parts
-- Verify imports, function calls, and dependencies
-- Look for similar patterns in the codebase
+If code is good, just say "LGTM".
 
-### Review Areas
-
-1. **Code Quality** - Readability, naming, organization
-2. **Bugs & Logic** - Errors, edge cases, error handling
-3. **Security** - Vulnerabilities, input validation, sensitive data
-4. **Performance** - Inefficient patterns, unnecessary operations
-5. **Compatibility** - Does it break existing code? Are imports correct?
-
-## Format
-For each issue found:
-- **File & Line**: Specify location
-- **Severity**: 🔴 Critical | 🟡 Important | 🟢 Minor
-- **Issue**: Describe the problem
-- **Suggestion**: How to fix it
-
-If the code looks good, say so! No need to find issues where there are none.
-
-## PR Diff
 \`\`\`diff
-${diff.substring(0, 50000)}
-\`\`\`
-${diff.length > 50000 ? "\n(diff truncated...)" : ""}
-`;
+${diff.substring(0, 30000)}
+\`\`\``;
 }
 
 /**
