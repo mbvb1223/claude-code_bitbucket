@@ -14,9 +14,19 @@ import { BitbucketClient } from "./bitbucket";
 import { logger, setVerbose } from "./logger";
 import { shouldRunReview, runReviewMode } from "./modes/review";
 import { shouldRunTag, runTagMode } from "./modes/tag";
+import { ensureClaudeCLI } from "./utils/install-claude";
 
 async function main(): Promise<void> {
   logger.info("Claude Bitbucket Review starting...");
+
+  // Step 1: Ensure Claude CLI is installed
+  const claudeReady = await ensureClaudeCLI();
+  if (!claudeReady) {
+    logger.error("Claude CLI is required but not available");
+    process.exit(1);
+  }
+
+  logger.success("Setup complete!");
   process.exit(0);
 
   // // 1. Load configuration
