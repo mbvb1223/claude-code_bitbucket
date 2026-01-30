@@ -149,13 +149,13 @@ function parseClaudeJsonOutput(output: string): { text: string; usage?: ClaudeUs
 
     // Extract usage information
     let usage: ClaudeUsage | undefined;
-    if (json.usage || json.cost_usd !== undefined) {
+    if (json.usage || json.total_cost_usd !== undefined) {
       usage = {
         inputTokens: json.usage?.input_tokens || json.input_tokens || 0,
         outputTokens: json.usage?.output_tokens || json.output_tokens || 0,
         totalTokens: (json.usage?.input_tokens || json.input_tokens || 0) +
                      (json.usage?.output_tokens || json.output_tokens || 0),
-        costUsd: json.cost_usd,
+        costUsd: json.total_cost_usd,
       };
     }
 
