@@ -85,11 +85,6 @@ The user is asking a question. Provide a helpful, concise answer.
 /**
  * Build tag prompt based on request type
  */
-export function buildTagPrompt(
-  params: TagPromptParams,
-  isActionable: boolean
-): string {
-  return isActionable
-    ? buildActionablePrompt(params)
-    : buildInformationalPrompt(params);
+export function buildTagPrompt(params: TagPromptParams, isActionable: boolean): string {
+  return isActionable ? buildActionablePrompt(params) : buildInformationalPrompt(params);
 }

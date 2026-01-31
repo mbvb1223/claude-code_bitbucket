@@ -34,10 +34,7 @@ export function shouldRunTag(config: Config): boolean {
 /**
  * Run tag mode - find @claude mentions and respond
  */
-export async function runTagMode(
-  config: Config,
-  client: BitbucketClient
-): Promise<TagResult> {
+export async function runTagMode(config: Config, client: BitbucketClient): Promise<TagResult> {
   logger.info("Starting tag mode...");
 
   if (!config.prId) {
@@ -114,11 +111,7 @@ export async function runTagMode(
 
   // 7. Post response as reply to the trigger comment
   if (result.output && config.bitbucketToken) {
-    const reply = await client.replyToComment(
-      config.prId,
-      triggerComment.id,
-      result.output
-    );
+    const reply = await client.replyToComment(config.prId, triggerComment.id, result.output);
 
     if (reply) {
       logger.success(`Responded to comment #${triggerComment.id}`);
@@ -136,10 +129,7 @@ export async function runTagMode(
 /**
  * Find the most recent comment with trigger phrase that hasn't been replied to
  */
-function findTriggerComment(
-  comments: PRComment[],
-  triggerPhrase: string
-): PRComment | null {
+function findTriggerComment(comments: PRComment[], triggerPhrase: string): PRComment | null {
   // Sort by date descending (most recent first)
   const sorted = [...comments].sort(
     (a, b) => new Date(b.created_on).getTime() - new Date(a.created_on).getTime()
@@ -160,7 +150,7 @@ function findTriggerComment(
 /**
  * Extract the actual request from the comment (after trigger phrase)
  */
-function extractRequest(content: string, triggerPhrase: string): string {
+export function extractRequest(content: string, triggerPhrase: string): string {
   const lower = content.toLowerCase();
   const idx = lower.indexOf(triggerPhrase.toLowerCase());
 
@@ -175,7 +165,7 @@ function extractRequest(content: string, triggerPhrase: string): string {
 /**
  * Classify if request is actionable (needs code changes) or informational
  */
-function classifyRequest(request: string): boolean {
+export function classifyRequest(request: string): boolean {
   const lower = request.toLowerCase();
 
   // Check actionable first
@@ -191,4 +181,3 @@ function classifyRequest(request: string): boolean {
   // Default to informational (safer)
   return false;
 }
-

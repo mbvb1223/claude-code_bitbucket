@@ -29,6 +29,18 @@
 - Prompts now use typed params interfaces (`ReviewPromptParams`, `TagPromptParams`)
 - Cleaner separation of concerns between mode logic and prompt templates
 
+### Phase 5: Code Quality
+- [x] Added ESLint 9 flat config with TypeScript support
+- [x] Added Prettier with project conventions
+- [x] Created `src/__tests__/` directory with 38 unit tests
+- [x] Exported `classifyRequest()` and `extractRequest()` from tag.ts for testing
+
+### Summary of Changes (Phase 5)
+- New files: `eslint.config.js`, `.prettierrc`, `src/__tests__/*.test.ts`
+- Added npm scripts: `lint`, `lint:fix`, `format`, `format:check`, `test`, `check`
+- 38 unit tests covering types, classification, and config modules
+- All code formatted with Prettier
+
 ---
 
 ## Remaining Tasks 📋
@@ -54,14 +66,15 @@
 - [ ] Add URL validation for Bitbucket workspace/repo
 - [ ] Consider adding schema validation (e.g., Zod)
 
-### Phase 5: Code Quality (Optional)
-- [ ] Add ESLint configuration
-- [ ] Add Prettier for consistent formatting
-- [ ] Add unit tests for:
-  - `classifyRequest()` function
-  - `isValidMode()` type guard
-  - Config loading/validation
-- [ ] Add integration tests for Claude CLI runner
+### Phase 5: Code Quality ✅
+- [x] Add ESLint configuration (flat config for ESLint 9)
+- [x] Add Prettier for consistent formatting
+- [x] Add unit tests for:
+  - [x] `classifyRequest()` function (12 tests)
+  - [x] `extractRequest()` function (7 tests)
+  - [x] `isValidMode()` type guard (5 tests)
+  - [x] Config loading/validation (14 tests)
+- [ ] Add integration tests for Claude CLI runner (deferred - requires mocking)
 
 ---
 
@@ -74,6 +87,10 @@ src/
 ├── logger.ts                # Logging utility
 ├── claude.ts                # Claude CLI runner
 ├── bitbucket.ts             # Bitbucket API client
+├── __tests__/               # Unit tests ✅
+│   ├── types.test.ts        # isValidMode tests
+│   ├── classify.test.ts     # classifyRequest, extractRequest tests
+│   └── config.test.ts       # loadConfig, validateConfig tests
 ├── shared/
 │   ├── index.ts             # Barrel exports ✅
 │   ├── constants.ts         # Centralized constants ✅

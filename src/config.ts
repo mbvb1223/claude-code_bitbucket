@@ -13,12 +13,12 @@ export interface Config {
   destinationBranch: string;
 
   // Authentication
-  bitbucketToken: string;      // username:app_password or x-token-auth:token
+  bitbucketToken: string; // username:app_password or x-token-auth:token
   anthropicApiKey: string;
 
   // Mode settings
-  mode: Mode;                   // review = auto-review, tag = @claude mentions
-  triggerPhrase: string;        // default: @claude
+  mode: Mode; // review = auto-review, tag = @claude mentions
+  triggerPhrase: string; // default: @claude
 
   // Optional
   model: string;

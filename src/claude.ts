@@ -43,10 +43,13 @@ export async function runClaude(
   // Build command arguments
   // Use JSON output to capture usage/cost information
   const args: string[] = [
-    "-p",                         // Print mode (non-interactive)
-    "--output-format", "json",    // JSON output includes usage info
-    "--model", config.model,
-    "--max-turns", config.maxTurns.toString(),
+    "-p", // Print mode (non-interactive)
+    "--output-format",
+    "json", // JSON output includes usage info
+    "--model",
+    config.model,
+    "--max-turns",
+    config.maxTurns.toString(),
   ];
 
   // Add tool restrictions if specified
@@ -153,8 +156,9 @@ function parseClaudeJsonOutput(output: string): { text: string; usage?: ClaudeUs
       usage = {
         inputTokens: json.usage?.input_tokens || json.input_tokens || 0,
         outputTokens: json.usage?.output_tokens || json.output_tokens || 0,
-        totalTokens: (json.usage?.input_tokens || json.input_tokens || 0) +
-                     (json.usage?.output_tokens || json.output_tokens || 0),
+        totalTokens:
+          (json.usage?.input_tokens || json.input_tokens || 0) +
+          (json.usage?.output_tokens || json.output_tokens || 0),
         costUsd: json.total_cost_usd,
       };
     }
@@ -185,10 +189,13 @@ export async function runClaudeStreaming(
 
   const args: string[] = [
     "-p",
-    "--verbose",                        // Required for stream-json
-    "--output-format", "stream-json",
-    "--model", config.model,
-    "--max-turns", config.maxTurns.toString(),
+    "--verbose", // Required for stream-json
+    "--output-format",
+    "stream-json",
+    "--model",
+    config.model,
+    "--max-turns",
+    config.maxTurns.toString(),
   ];
 
   if (options.allowedTools?.length) {

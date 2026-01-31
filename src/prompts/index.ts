@@ -2,11 +2,7 @@
  * Prompt templates barrel export
  */
 
-export {
-  buildReviewPrompt,
-  formatReviewComment,
-  type ReviewPromptParams,
-} from "./review";
+export { buildReviewPrompt, formatReviewComment, type ReviewPromptParams } from "./review";
 
 export {
   buildTagPrompt,

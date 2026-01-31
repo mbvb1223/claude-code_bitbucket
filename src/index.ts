@@ -84,7 +84,6 @@ async function main(): Promise<void> {
       } else {
         logger.info("Review completed (no comment posted)");
       }
-
     } else if (config.mode === "tag") {
       // Tag mode: respond to @claude mentions
       if (!shouldRunTag(config)) {
@@ -105,7 +104,6 @@ async function main(): Promise<void> {
       } else {
         logger.info("No @claude mentions to respond to");
       }
-
     } else {
       logger.error(`Unknown mode: ${config.mode}`);
       process.exit(1);
@@ -113,7 +111,6 @@ async function main(): Promise<void> {
 
     logger.success("Done!");
     process.exit(0);
-
   } catch (error) {
     logger.error("Fatal error:", error);
     process.exit(1);

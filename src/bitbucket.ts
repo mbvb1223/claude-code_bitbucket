@@ -86,11 +86,7 @@ export class BitbucketClient {
   /**
    * Make authenticated request to Bitbucket API
    */
-  private async request<T>(
-    method: string,
-    path: string,
-    body?: object
-  ): Promise<T | null> {
+  private async request<T>(method: string, path: string, body?: object): Promise<T | null> {
     const url = `${API_BASE}${path}`;
 
     const headers: Record<string, string> = {
@@ -221,11 +217,7 @@ export class BitbucketClient {
   /**
    * Reply to an existing comment (thread)
    */
-  async replyToComment(
-    prId: number,
-    parentId: number,
-    content: string
-  ): Promise<PRComment | null> {
+  async replyToComment(prId: number, parentId: number, content: string): Promise<PRComment | null> {
     if (!this.authHeader) {
       logger.warn("No auth token - cannot reply to comment");
       return null;
