@@ -15,8 +15,18 @@ bun start
 # Type checking
 bun run typecheck
 
+# Linting & formatting
+bun run lint
+bun run format
+
+# Run tests
+bun test
+
+# Run all checks
+bun run check
+
 # Build for production
-bun build ./src/index.ts --outdir ./dist --target bun
+bun run build
 ```
 
 ## Architecture
@@ -98,9 +108,8 @@ Centralized utilities and types:
 - **types.ts**: `ModeResult`, `ReviewResult`, `TagResult`, `Mode`, `isValidMode()`
 - **usage.ts**: `logClaudeUsage()` for consistent usage logging
 
-## Active Refactoring Plan
+## Prompts Module (`src/prompts/`)
 
-See `.claude/REFACTOR_PLAN.md` for:
-- Completed refactoring tasks
-- Remaining improvements (error handling, prompts extraction, validation)
-- File structure roadmap
+Extracted prompt templates:
+- **review.ts**: `buildReviewPrompt()`, `formatReviewComment()`
+- **tag.ts**: `buildTagPrompt()`, `buildActionablePrompt()`, `buildInformationalPrompt()`
