@@ -111,6 +111,25 @@ src/
 
 ---
 
+## Deferred - Tag Mode 🔜
+
+All tag mode improvements deferred for later:
+- Duplicate response check in `findTriggerComment()`
+- Tag mode integration tests
+- Tag-specific error handling
+
+**Current focus: Review Mode**
+
+---
+
+## Review Mode - Pending Improvements
+
+- [ ] Fix dynamic import in `index.ts:55` - should be static import
+- [ ] Review unused git utilities (`getFileDiff`, `getCurrentBranch`, `getLastCommitMessage`)
+- [ ] Better error handling for `bitbucket.ts` and `git.ts` (return empty/null on errors)
+
+---
+
 ## How to Continue
 
 1. Run `bun run typecheck` to verify current state
