@@ -8,14 +8,15 @@ import type { Config } from "../config";
 import type { BitbucketClient, PRComment } from "../bitbucket";
 import { runClaude } from "../claude";
 import { logger } from "../logger";
-import { TOOL_CONFIGS, logClaudeUsage } from "../shared";
+import {
+  TOOL_CONFIGS,
+  ACTIONABLE_PATTERNS,
+  INFORMATIONAL_PATTERNS,
+  logClaudeUsage,
+  type TagResult,
+} from "../shared";
 
-export interface TagResult {
-  success: boolean;
-  responded: boolean;
-  commentId?: number;
-  error?: string;
-}
+export type { TagResult };
 
 /**
  * Check if tag mode should run
@@ -166,32 +167,14 @@ function extractRequest(content: string, triggerPhrase: string): string {
 function classifyRequest(request: string): boolean {
   const lower = request.toLowerCase();
 
-  // Actionable keywords
-  const actionablePatterns = [
-    /\b(fix|change|update|add|remove|delete|modify|refactor|implement|create)\b/,
-    /\b(make it|can you|please|could you).*(change|fix|add|update)/,
-    /\b(this should|it should|needs to)\b/,
-  ];
-
-  // Informational keywords
-  const informationalPatterns = [
-    /\b(what|why|how|explain|review|check|look at|analyze)\b/,
-    /\b(does this|is this|are there)\b/,
-    /\?$/,  // Ends with question mark
-  ];
-
   // Check actionable first
-  for (const pattern of actionablePatterns) {
-    if (pattern.test(lower)) {
-      return true;
-    }
+  if (ACTIONABLE_PATTERNS.some((pattern) => pattern.test(lower))) {
+    return true;
   }
 
   // Check informational
-  for (const pattern of informationalPatterns) {
-    if (pattern.test(lower)) {
-      return false;
-    }
+  if (INFORMATIONAL_PATTERNS.some((pattern) => pattern.test(lower))) {
+    return false;
   }
 
   // Default to informational (safer)

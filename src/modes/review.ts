@@ -9,13 +9,9 @@ import type { BitbucketClient, PullRequest } from "../bitbucket";
 import { runClaude } from "../claude";
 import { logger } from "../logger";
 import { getLocalDiff, getChangedFiles } from "../utils/git";
-import { TOOL_CONFIGS, MAX_DIFF_SIZE, logClaudeUsage } from "../shared";
+import { TOOL_CONFIGS, MAX_DIFF_SIZE, logClaudeUsage, type ReviewResult } from "../shared";
 
-export interface ReviewResult {
-  success: boolean;
-  reviewPosted: boolean;
-  error?: string;
-}
+export type { ReviewResult };
 
 /**
  * Check if review mode should run

@@ -3,6 +3,8 @@
  * Loads and validates environment variables
  */
 
+import { isValidMode, type Mode } from "./shared";
+
 export interface Config {
   // Bitbucket settings
   workspace: string;
@@ -15,7 +17,7 @@ export interface Config {
   anthropicApiKey: string;
 
   // Mode settings
-  mode: "review" | "tag";       // review = auto-review, tag = @claude mentions
+  mode: Mode;                   // review = auto-review, tag = @claude mentions
   triggerPhrase: string;        // default: @claude
 
   // Optional
@@ -28,25 +30,28 @@ export interface Config {
  * Load configuration from environment variables
  */
 export function loadConfig(): Config {
-    return {
-      // Bitbucket (from pipeline environment)
-      workspace: env("BITBUCKET_WORKSPACE"),
-      repoSlug: env("BITBUCKET_REPO_SLUG"),
-      prId: optionalInt("BITBUCKET_PR_ID"),
-      destinationBranch: env("BITBUCKET_PR_DESTINATION_BRANCH", "main"),
+  const modeValue = env("MODE", "review");
+  const mode: Mode = isValidMode(modeValue) ? modeValue : "review";
 
-      // Authentication
-      bitbucketToken: env("BITBUCKET_ACCESS_TOKEN", ""),
-      anthropicApiKey: env("ANTHROPIC_API_KEY", ""),
+  return {
+    // Bitbucket (from pipeline environment)
+    workspace: env("BITBUCKET_WORKSPACE"),
+    repoSlug: env("BITBUCKET_REPO_SLUG"),
+    prId: optionalInt("BITBUCKET_PR_ID"),
+    destinationBranch: env("BITBUCKET_PR_DESTINATION_BRANCH", "main"),
 
-      // Mode
-      mode: env("MODE", "review") as "review" | "tag",
-      triggerPhrase: env("TRIGGER_PHRASE", "@claude"),
+    // Authentication
+    bitbucketToken: env("BITBUCKET_ACCESS_TOKEN", ""),
+    anthropicApiKey: env("ANTHROPIC_API_KEY", ""),
 
-      // Optional settings
-      model: env("MODEL", "haiku"),
-      maxTurns: parseInt(env("MAX_TURNS", "30")),
-      verbose: env("VERBOSE", "false") === "true",
+    // Mode (validated)
+    mode,
+    triggerPhrase: env("TRIGGER_PHRASE", "@claude"),
+
+    // Optional settings
+    model: env("MODEL", "haiku"),
+    maxTurns: parseInt(env("MAX_TURNS", "30")),
+    verbose: env("VERBOSE", "false") === "true",
   };
 }
 
