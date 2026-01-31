@@ -90,3 +90,17 @@ Default fallback: Informational (safer)
 - **Local-first**: Uses git commands instead of API calls when possible
 - **Environment-driven**: All configuration via environment variables
 - **Tool safety**: Dynamic tool access based on request classification
+
+## Shared Module (`src/shared/`)
+
+Centralized utilities and types:
+- **constants.ts**: `MAX_DIFF_SIZE`, `TOOL_CONFIGS`, `ACTIONABLE_PATTERNS`, `INFORMATIONAL_PATTERNS`
+- **types.ts**: `ModeResult`, `ReviewResult`, `TagResult`, `Mode`, `isValidMode()`
+- **usage.ts**: `logClaudeUsage()` for consistent usage logging
+
+## Active Refactoring Plan
+
+See `.claude/REFACTOR_PLAN.md` for:
+- Completed refactoring tasks
+- Remaining improvements (error handling, prompts extraction, validation)
+- File structure roadmap
