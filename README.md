@@ -1,27 +1,42 @@
 # Claude Bitbucket PR Review
 
-A simplified TypeScript implementation for automated PR code review using Claude CLI with Bitbucket integration.
+A TypeScript automation tool for PR code review using Claude CLI with Bitbucket integration.
 
 ## Features
 
 - **Review Mode**: Automatically review PRs when created
 - **Tag Mode**: Respond to `@claude` mentions in PR comments
 - **No external dependencies**: Uses native `fetch` for Bitbucket API
-- **TypeScript**: Full type safety
+- **TypeScript**: Full type safety with strict mode
 - **Bun runtime**: Fast execution
+- **Well tested**: Unit tests with Bun test runner
 
 ## Project Structure
 
 ```
 src/
-├── index.ts        # Entry point - coordinates modes
-├── config.ts       # Environment variable loading
-├── logger.ts       # Simple logging utility
-├── bitbucket.ts    # Bitbucket API client (native fetch)
-├── claude.ts       # Claude CLI runner
-└── modes/
-    ├── review.ts   # Auto-review mode
-    └── tag.ts      # @claude trigger mode
+├── index.ts           # Entry point - coordinates modes
+├── config.ts          # Environment variable loading
+├── logger.ts          # Simple logging utility
+├── bitbucket.ts       # Bitbucket API client (native fetch)
+├── claude.ts          # Claude CLI runner
+├── __tests__/         # Unit tests
+│   ├── types.test.ts
+│   ├── classify.test.ts
+│   └── config.test.ts
+├── shared/            # Shared utilities
+│   ├── constants.ts   # Centralized constants
+│   ├── types.ts       # Shared type definitions
+│   └── usage.ts       # Usage logging
+├── prompts/           # Prompt templates
+│   ├── review.ts      # Review mode prompts
+│   └── tag.ts         # Tag mode prompts
+├── modes/
+│   ├── review.ts      # Auto-review mode
+│   └── tag.ts         # @claude trigger mode
+└── utils/
+    ├── git.ts         # Git utilities
+    └── install-claude.ts
 ```
 
 ## How It Works
@@ -29,9 +44,9 @@ src/
 ### Review Mode (`MODE=review`)
 
 1. Triggered on every PR pipeline run
-2. Fetches PR diff from Bitbucket API
+2. Gets PR diff using local git commands
 3. Sends diff to Claude for review (read-only tools)
-4. Posts review as PR comment
+4. Posts review as PR comment with severity badges (🔴🟡🟢)
 
 ### Tag Mode (`MODE=tag`)
 
@@ -44,23 +59,23 @@ src/
 ## Requirements
 
 - [Bun](https://bun.sh/) >= 1.0.0
-- [Claude CLI](https://github.com/anthropics/claude-code) installed
+- [Claude CLI](https://github.com/anthropics/claude-code) (auto-installed if missing)
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `ANTHROPIC_API_KEY` | Yes | API key for Claude CLI |
-| `BITBUCKET_WORKSPACE` | Yes | Bitbucket workspace name |
-| `BITBUCKET_REPO_SLUG` | Yes | Repository slug |
-| `BITBUCKET_PR_ID` | Yes* | Pull request ID (*provided by pipeline) |
-| `BITBUCKET_PR_DESTINATION_BRANCH` | No | Target branch (default: main) |
-| `BITBUCKET_ACCESS_TOKEN` | No | For posting comments: `username:app_password` |
-| `MODE` | No | `review` or `tag` (default: review) |
-| `TRIGGER_PHRASE` | No | Trigger for tag mode (default: @claude) |
-| `MODEL` | No | Claude model (default: sonnet) |
-| `MAX_TURNS` | No | Max conversation turns (default: 30) |
-| `VERBOSE` | No | Enable debug logging (default: false) |
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `ANTHROPIC_API_KEY` | Yes | - | API key for Claude CLI |
+| `BITBUCKET_WORKSPACE` | Yes | - | Bitbucket workspace name |
+| `BITBUCKET_REPO_SLUG` | Yes | - | Repository slug |
+| `BITBUCKET_PR_ID` | Yes* | - | Pull request ID (*provided by pipeline) |
+| `BITBUCKET_PR_DESTINATION_BRANCH` | No | `main` | Target branch |
+| `BITBUCKET_ACCESS_TOKEN` | No | - | For posting comments |
+| `MODE` | No | `review` | `review` or `tag` |
+| `TRIGGER_PHRASE` | No | `@claude` | Trigger for tag mode |
+| `MODEL` | No | `haiku` | Claude model |
+| `MAX_TURNS` | No | `30` | Max conversation turns |
+| `VERBOSE` | No | `false` | Enable debug logging |
 
 ## Usage
 
@@ -82,6 +97,33 @@ MODE=review bun start
 
 # Run tag mode
 MODE=tag bun start
+```
+
+### Development Commands
+
+```bash
+# Run the application
+bun start
+
+# Type checking
+bun run typecheck
+
+# Linting
+bun run lint
+bun run lint:fix
+
+# Formatting
+bun run format
+bun run format:check
+
+# Run tests
+bun test
+
+# Run all checks (typecheck + lint + format)
+bun run check
+
+# Build for production
+bun run build
 ```
 
 ### Bitbucket Pipeline
@@ -122,59 +164,28 @@ Set these in Bitbucket > Repository Settings > Repository Variables:
    - Pull requests: Read, Write
 3. Use format: `your-username:app-password-here`
 
-## Request Classification
-
-In tag mode, requests are classified as:
+## Request Classification (Tag Mode)
 
 | Type | Examples | Claude Tools |
 |------|----------|--------------|
-| **Informational** | "What does this do?", "Review this code" | Read, Grep (read-only) |
+| **Informational** | "What does this do?", "Review this code" | Read, Grep, Glob |
 | **Actionable** | "Fix this bug", "Add error handling" | Read, Edit, Write, Bash |
 
-## Architecture Overview
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    index.ts                             │
-│                  (Entry Point)                          │
-└─────────────────────┬───────────────────────────────────┘
-                      │
-          ┌───────────┴───────────┐
-          │                       │
-          ▼                       ▼
-┌─────────────────┐     ┌─────────────────┐
-│  Review Mode    │     │    Tag Mode     │
-│  (auto-review)  │     │ (@claude reply) │
-└────────┬────────┘     └────────┬────────┘
-         │                       │
-         └───────────┬───────────┘
-                     │
-                     ▼
-         ┌───────────────────────┐
-         │     claude.ts         │
-         │  (Claude CLI Runner)  │
-         └───────────┬───────────┘
-                     │
-                     ▼
-         ┌───────────────────────┐
-         │    bitbucket.ts       │
-         │ (API Client - fetch)  │
-         └───────────────────────┘
+index.ts (Entry Point)
+    │
+    ├── config.ts (Load & validate env vars)
+    │
+    ├── [Mode Dispatcher]
+    │   ├── review.ts (Auto PR review)
+    │   └── tag.ts (@claude responses)
+    │
+    ├── claude.ts (CLI runner)
+    │
+    └── bitbucket.ts (API client)
 ```
-
-## Comparison with tsadrakula/Claude_Code_Bitbucket
-
-| Feature | This Project | tsadrakula |
-|---------|--------------|------------|
-| Language | TypeScript | TypeScript |
-| Runtime | Bun | Bun |
-| Dependencies | None (native fetch) | bitbucket SDK, MCP SDK |
-| Modes | 2 (review, tag) | 3 (review, tag, agent) |
-| Streaming | Basic | Full streaming comments |
-| Cloud Providers | Anthropic only | Anthropic, AWS, GCP |
-| Complexity | ~400 lines | ~3000+ lines |
-
-This project is intentionally simpler for learning purposes.
 
 ## License
 
