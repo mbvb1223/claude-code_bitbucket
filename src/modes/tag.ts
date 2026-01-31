@@ -15,6 +15,7 @@ import {
   logClaudeUsage,
   type TagResult,
 } from "../shared";
+import { buildTagPrompt } from "../prompts";
 
 export type { TagResult };
 
@@ -77,7 +78,17 @@ export async function runTagMode(
   logger.info(`Request type: ${isActionable ? "actionable" : "informational"}`);
 
   // 5. Build prompt based on request type
-  const prompt = buildTagPrompt(config, triggerComment, userRequest, isActionable);
+  const sourceBranch = process.env.BITBUCKET_BRANCH || "unknown";
+  const prompt = buildTagPrompt(
+    {
+      prId: config.prId,
+      sourceBranch,
+      destBranch: config.destinationBranch,
+      request: userRequest,
+      inlineContext: triggerComment.inline,
+    },
+    isActionable
+  );
 
   // 6. Run Claude with appropriate tools
   const toolConfig = isActionable ? TOOL_CONFIGS.fullAccess : TOOL_CONFIGS.readOnly;
@@ -181,67 +192,3 @@ function classifyRequest(request: string): boolean {
   return false;
 }
 
-/**
- * Build prompt for tag mode
- */
-function buildTagPrompt(
-  config: Config,
-  comment: PRComment,
-  request: string,
-  isActionable: boolean
-): string {
-  const prId = config.prId;
-  const sourceBranch = process.env.BITBUCKET_BRANCH || "unknown";
-  const destBranch = config.destinationBranch;
-
-  let contextInfo = "";
-
-  // Add inline context if this is an inline comment
-  if (comment.inline) {
-    contextInfo = `
-## Inline Comment Context
-The user commented on file: **${comment.inline.path}**
-Lines: ${comment.inline.from || "start"} - ${comment.inline.to || "end"}
-`;
-  }
-
-  if (isActionable) {
-    return `
-# Pull Request Task
-
-**PR #${prId}**
-**Branch:** ${sourceBranch} → ${destBranch}
-${contextInfo}
-
-## User Request
-${request}
-
-## Instructions
-The user has requested a code change. You should:
-
-1. Read the relevant files to understand the context
-2. Make the requested changes using Edit or Write tools
-3. If you make changes, explain what you did
-
-Be concise in your response. Focus on completing the task.
-`;
-  } else {
-    return `
-# Pull Request Question
-
-**PR #${prId}**
-**Branch:** ${sourceBranch} → ${destBranch}
-${contextInfo}
-
-## User Question
-${request}
-
-## Instructions
-The user is asking a question. Provide a helpful, concise answer.
-
-- Read relevant files if needed to understand context
-- Do NOT make any code changes
-- Be direct and helpful
-`;
-  }
-}

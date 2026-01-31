@@ -9,7 +9,8 @@ import type { BitbucketClient, PullRequest } from "../bitbucket";
 import { runClaude } from "../claude";
 import { logger } from "../logger";
 import { getLocalDiff, getChangedFiles } from "../utils/git";
-import { TOOL_CONFIGS, MAX_DIFF_SIZE, logClaudeUsage, type ReviewResult } from "../shared";
+import { TOOL_CONFIGS, logClaudeUsage, type ReviewResult } from "../shared";
+import { buildReviewPrompt, formatReviewComment } from "../prompts";
 
 export type { ReviewResult };
 
@@ -63,7 +64,11 @@ export async function runReviewMode(
   logger.info(`Diff size: ${diff.length} characters`);
 
   // 3. Build review prompt
-  const prompt = buildReviewPrompt(config, pr, diff);
+  const title = pr?.title || process.env.BITBUCKET_PR_TITLE || "PR";
+  const sourceBranch = pr?.source?.branch?.name || process.env.BITBUCKET_BRANCH || "";
+  const destBranch = pr?.destination?.branch?.name || config.destinationBranch;
+
+  const prompt = buildReviewPrompt({ title, sourceBranch, destBranch, diff });
 
   // 4. Run Claude with read-only tools (no editing)
   const result = await runClaude(config, prompt, TOOL_CONFIGS.readOnly);
@@ -110,42 +115,3 @@ export async function runReviewMode(
   return { success: true, reviewPosted: false };
 }
 
-/**
- * Build the prompt for Claude to review the PR
- */
-function buildReviewPrompt(
-  config: Config,
-  pr: PullRequest | null,
-  diff: string
-): string {
-  const title = pr?.title || process.env.BITBUCKET_PR_TITLE || "PR";
-  const sourceBranch = pr?.source?.branch?.name || process.env.BITBUCKET_BRANCH || "";
-  const destBranch = pr?.destination?.branch?.name || config.destinationBranch;
-
-  return `Review this PR. Be concise - bullet points only.
-
-**${title}** (${sourceBranch} → ${destBranch})
-
-Check for: bugs, security issues, logic errors. Skip style nits.
-
-Format: 🔴 Critical | 🟡 Important | 🟢 Minor
-- File:line - Issue - Fix
-
-If code is good, just say "LGTM".
-
-\`\`\`diff
-${diff.substring(0, MAX_DIFF_SIZE)}
-\`\`\``;
-}
-
-/**
- * Format the review output for posting as a comment
- */
-function formatReviewComment(output: string): string {
-  return `## Claude Code Review
-
-${output}
-
----
-*Automated review by Claude*`;
-}

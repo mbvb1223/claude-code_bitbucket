@@ -11,11 +11,23 @@
 - [x] Updated `src/modes/tag.ts` - Uses shared constants, patterns, logging, and types
 - [x] Updated `src/config.ts` - Uses `Mode` type with `isValidMode()` type guard
 
-### Summary of Changes
+### Summary of Changes (Phase 1)
 - Removed ~35 lines of duplicated code
 - Centralized 2 regex pattern arrays (ACTIONABLE_PATTERNS, INFORMATIONAL_PATTERNS)
 - Unified tool configurations (TOOL_CONFIGS.readOnly, TOOL_CONFIGS.fullAccess)
 - Added type safety to config.mode (no more unsafe `as` cast)
+
+### Phase 3: Extract Prompts
+- [x] Created `src/prompts/review.ts` - `buildReviewPrompt()`, `formatReviewComment()`
+- [x] Created `src/prompts/tag.ts` - `buildTagPrompt()`, `buildActionablePrompt()`, `buildInformationalPrompt()`
+- [x] Created `src/prompts/index.ts` - Barrel exports
+- [x] Updated `src/modes/review.ts` - Imports prompts from `../prompts`
+- [x] Updated `src/modes/tag.ts` - Imports prompts from `../prompts`
+
+### Summary of Changes (Phase 3)
+- Extracted ~70 lines of prompt templates to dedicated module
+- Prompts now use typed params interfaces (`ReviewPromptParams`, `TagPromptParams`)
+- Cleaner separation of concerns between mode logic and prompt templates
 
 ---
 
@@ -30,11 +42,11 @@
 - [ ] Update `src/claude.ts` to use ClaudeError
 - [ ] Add error recovery/retry logic where appropriate
 
-### Phase 3: Extract Prompts
-- [ ] Create `src/prompts/review.ts` - Review prompt template
-- [ ] Create `src/prompts/tag.ts` - Tag mode prompts (actionable/informational)
-- [ ] Create `src/prompts/index.ts` - Barrel export
-- [ ] Update modes to import prompts from shared location
+### Phase 3: Extract Prompts ✅
+- [x] Create `src/prompts/review.ts` - Review prompt template
+- [x] Create `src/prompts/tag.ts` - Tag mode prompts (actionable/informational)
+- [x] Create `src/prompts/index.ts` - Barrel export
+- [x] Update modes to import prompts from shared location
 
 ### Phase 4: Additional Validation
 - [ ] Add `VALID_MODELS` constant and validate model names
@@ -68,10 +80,10 @@ src/
 │   ├── types.ts             # Shared type definitions ✅
 │   ├── usage.ts             # Usage logging utility ✅
 │   └── errors.ts            # Custom error classes (TODO)
-├── prompts/                 # (TODO)
-│   ├── index.ts
-│   ├── review.ts
-│   └── tag.ts
+├── prompts/
+│   ├── index.ts             # Barrel exports ✅
+│   ├── review.ts            # Review prompts ✅
+│   └── tag.ts               # Tag mode prompts ✅
 ├── modes/
 │   ├── review.ts            # Review mode (refactored) ✅
 │   └── tag.ts               # Tag mode (refactored) ✅
