@@ -9,6 +9,7 @@ import type { BitbucketClient, PullRequest } from "../bitbucket";
 import { runClaude } from "../claude";
 import { logger } from "../logger";
 import { getLocalDiff, getChangedFiles } from "../utils/git";
+import { TOOL_CONFIGS, MAX_DIFF_SIZE, logClaudeUsage } from "../shared";
 
 export interface ReviewResult {
   success: boolean;
@@ -69,10 +70,7 @@ export async function runReviewMode(
   const prompt = buildReviewPrompt(config, pr, diff);
 
   // 4. Run Claude with read-only tools (no editing)
-  const result = await runClaude(config, prompt, {
-    allowedTools: ["Read", "Grep", "Glob"],
-    blockedTools: ["Write", "Edit", "MultiEdit", "Bash"],
-  });
+  const result = await runClaude(config, prompt, TOOL_CONFIGS.readOnly);
 
   if (!result.success) {
     logger.error("Claude review failed:", result.error);
@@ -93,16 +91,7 @@ export async function runReviewMode(
   }
 
   // Log usage/cost information
-  if (result.usage) {
-    logger.info("--- Claude Usage ---");
-    logger.info(`  Input tokens:  ${result.usage.inputTokens.toLocaleString()}`);
-    logger.info(`  Output tokens: ${result.usage.outputTokens.toLocaleString()}`);
-    logger.info(`  Total tokens:  ${result.usage.totalTokens.toLocaleString()}`);
-    if (result.usage.costUsd !== undefined) {
-      logger.info(`  Cost:          $${result.usage.costUsd.toFixed(4)}`);
-    }
-    logger.info("--------------------");
-  }
+  logClaudeUsage(result.usage);
 
   // 5. Post review comment
   if (result.output && config.bitbucketToken) {
@@ -149,7 +138,7 @@ Format: 🔴 Critical | 🟡 Important | 🟢 Minor
 If code is good, just say "LGTM".
 
 \`\`\`diff
-${diff.substring(0, 30000)}
+${diff.substring(0, MAX_DIFF_SIZE)}
 \`\`\``;
 }
 

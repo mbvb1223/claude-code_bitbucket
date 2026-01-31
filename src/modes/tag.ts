@@ -8,6 +8,7 @@ import type { Config } from "../config";
 import type { BitbucketClient, PRComment } from "../bitbucket";
 import { runClaude } from "../claude";
 import { logger } from "../logger";
+import { TOOL_CONFIGS, logClaudeUsage } from "../shared";
 
 export interface TagResult {
   success: boolean;
@@ -78,17 +79,8 @@ export async function runTagMode(
   const prompt = buildTagPrompt(config, triggerComment, userRequest, isActionable);
 
   // 6. Run Claude with appropriate tools
-  const tools = isActionable
-    ? {
-        allowedTools: ["Read", "Edit", "Write", "Grep", "Glob", "Bash"],
-        blockedTools: [],
-      }
-    : {
-        allowedTools: ["Read", "Grep", "Glob"],
-        blockedTools: ["Write", "Edit", "MultiEdit", "Bash"],
-      };
-
-  const result = await runClaude(config, prompt, tools);
+  const toolConfig = isActionable ? TOOL_CONFIGS.fullAccess : TOOL_CONFIGS.readOnly;
+  const result = await runClaude(config, prompt, toolConfig);
 
   if (!result.success) {
     logger.error("Claude failed:", result.error);
@@ -106,16 +98,7 @@ export async function runTagMode(
   }
 
   // Log usage/cost information
-  if (result.usage) {
-    logger.info("--- Claude Usage ---");
-    logger.info(`  Input tokens:  ${result.usage.inputTokens.toLocaleString()}`);
-    logger.info(`  Output tokens: ${result.usage.outputTokens.toLocaleString()}`);
-    logger.info(`  Total tokens:  ${result.usage.totalTokens.toLocaleString()}`);
-    if (result.usage.costUsd !== undefined) {
-      logger.info(`  Cost:          $${result.usage.costUsd.toFixed(4)}`);
-    }
-    logger.info("--------------------");
-  }
+  logClaudeUsage(result.usage);
 
   // 7. Post response as reply to the trigger comment
   if (result.output && config.bitbucketToken) {
