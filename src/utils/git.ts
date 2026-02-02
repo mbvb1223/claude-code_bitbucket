@@ -97,3 +97,67 @@ export function getLastCommitMessage(): string {
     return "";
   }
 }
+
+/**
+ * Filter a unified diff to only include changes for files matching patterns
+ * @param diff The full unified diff string
+ * @param include Array of glob patterns for files to include
+ * @param exclude Array of glob patterns for files to exclude
+ * @returns Filtered diff containing only matching file changes
+ */
+export function filterDiffByPatterns(diff: string, include?: string[], exclude?: string[]): string {
+  // Dynamic import to avoid circular dependency
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { shouldIncludeFile } = require("../project-config");
+
+  if (!include?.length && !exclude?.length) {
+    return diff;
+  }
+
+  // Split diff into file chunks
+  // Each chunk starts with "diff --git a/path b/path"
+  const fileChunks = diff.split(/(?=diff --git)/);
+
+  const filteredChunks: string[] = [];
+
+  for (const chunk of fileChunks) {
+    if (!chunk.trim()) continue;
+
+    // Extract file path from diff header
+    // Format: "diff --git a/path/to/file b/path/to/file"
+    const match = chunk.match(/^diff --git a\/(.+?) b\/(.+)/);
+    if (!match) {
+      // Not a valid diff chunk, include as-is (might be header info)
+      filteredChunks.push(chunk);
+      continue;
+    }
+
+    const filePath = match[2]; // Use the "b" path (destination)
+
+    // Check if file should be included
+    if (shouldIncludeFile(filePath, include, exclude)) {
+      filteredChunks.push(chunk);
+    }
+  }
+
+  return filteredChunks.join("");
+}
+
+/**
+ * Filter list of files by include/exclude patterns
+ */
+export function filterFilesByPatterns(
+  files: string[],
+  include?: string[],
+  exclude?: string[]
+): string[] {
+  // Dynamic import to avoid circular dependency
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { shouldIncludeFile } = require("../project-config");
+
+  if (!include?.length && !exclude?.length) {
+    return files;
+  }
+
+  return files.filter((file) => shouldIncludeFile(file, include, exclude));
+}

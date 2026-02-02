@@ -9,19 +9,33 @@ export interface ReviewPromptParams {
   sourceBranch: string;
   destBranch: string;
   diff: string;
+  customPrompt?: string;
+  projectName?: string;
+  projectType?: string;
 }
 
 /**
  * Build the prompt for Claude to review the PR
  */
 export function buildReviewPrompt(params: ReviewPromptParams): string {
-  const { title, sourceBranch, destBranch, diff } = params;
+  const { title, sourceBranch, destBranch, diff, customPrompt, projectName, projectType } = params;
+
+  // Build project context if available
+  const projectContext =
+    projectName || projectType
+      ? `\n**Project:** ${projectName || ""}${projectType ? ` (${projectType})` : ""}\n`
+      : "";
+
+  // Use custom prompt or default
+  const reviewInstructions = customPrompt
+    ? customPrompt
+    : `Check for: bugs, security issues, logic errors. Skip style nits.`;
 
   return `Review this PR. Be concise - bullet points only.
 
-**${title}** (${sourceBranch} → ${destBranch})
+**${title}** (${sourceBranch} → ${destBranch})${projectContext}
 
-Check for: bugs, security issues, logic errors. Skip style nits.
+${reviewInstructions}
 
 Format: 🔴 Critical | 🟡 Important | 🟢 Minor
 - File:line - Issue - Fix

@@ -4,6 +4,7 @@
  */
 
 import { isValidMode, type Mode } from "./shared";
+import { loadProjectConfig, type ProjectConfig } from "./project-config";
 
 export interface Config {
   // Bitbucket settings
@@ -24,14 +25,24 @@ export interface Config {
   model: string;
   maxTurns: number;
   verbose: boolean;
+
+  // Project-level config (from .claude-review.yml)
+  projectConfig: ProjectConfig | null;
 }
 
 /**
  * Load configuration from environment variables
  */
 export function loadConfig(): Config {
+  // Load project config first (may override some env defaults)
+  const projectConfig = loadProjectConfig();
+
   const modeValue = env("MODE", "review");
   const mode: Mode = isValidMode(modeValue) ? modeValue : "review";
+
+  // Project config can override trigger and model if not set in env
+  const triggerFromEnv = process.env.TRIGGER_PHRASE;
+  const modelFromEnv = process.env.MODEL;
 
   return {
     // Bitbucket (from pipeline environment)
@@ -46,12 +57,17 @@ export function loadConfig(): Config {
 
     // Mode (validated)
     mode,
-    triggerPhrase: env("TRIGGER_PHRASE", "@claude"),
+    // Use env var if set, otherwise project config, otherwise default
+    triggerPhrase: triggerFromEnv || projectConfig?.trigger || "@claude",
 
     // Optional settings
-    model: env("MODEL", "haiku"),
+    // Use env var if set, otherwise project config, otherwise default
+    model: modelFromEnv || projectConfig?.model || "haiku",
     maxTurns: parseInt(env("MAX_TURNS", "30")),
     verbose: env("VERBOSE", "false") === "true",
+
+    // Project-level config
+    projectConfig,
   };
 }
 

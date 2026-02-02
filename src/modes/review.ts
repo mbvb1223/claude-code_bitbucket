@@ -8,7 +8,12 @@ import type { Config } from "../config";
 import type { BitbucketClient, PullRequest } from "../bitbucket";
 import { runClaude } from "../claude";
 import { logger } from "../logger";
-import { getLocalDiff, getChangedFiles } from "../utils/git";
+import {
+  getLocalDiff,
+  getChangedFiles,
+  filterDiffByPatterns,
+  filterFilesByPatterns,
+} from "../utils/git";
 import { TOOL_CONFIGS, logClaudeUsage, type ReviewResult } from "../shared";
 import { buildReviewPrompt, formatReviewComment } from "../prompts";
 
@@ -51,13 +56,26 @@ export async function runReviewMode(
 
   // 2. Get diff using local git (no API call needed!)
   logger.info("Getting diff from local git...");
-  const changedFiles = getChangedFiles(config.destinationBranch);
+  const allChangedFiles = getChangedFiles(config.destinationBranch);
+
+  // Apply file patterns from project config
+  const includePatterns = config.projectConfig?.review?.include;
+  const excludePatterns = config.projectConfig?.review?.exclude;
+
+  const changedFiles = filterFilesByPatterns(allChangedFiles, includePatterns, excludePatterns);
+
+  if (includePatterns?.length || excludePatterns?.length) {
+    logger.info(`File patterns applied: ${allChangedFiles.length} → ${changedFiles.length} files`);
+  }
   logger.info(`Changed files: ${changedFiles.length}`);
 
-  const diff = getLocalDiff(config.destinationBranch);
+  let diff = getLocalDiff(config.destinationBranch);
+
+  // Filter diff by patterns
+  diff = filterDiffByPatterns(diff, includePatterns, excludePatterns);
 
   if (!diff) {
-    logger.warn("No diff found");
+    logger.warn("No diff found (after filtering)");
     return { success: true, reviewPosted: false, error: "No diff" };
   }
 
@@ -68,7 +86,15 @@ export async function runReviewMode(
   const sourceBranch = pr?.source?.branch?.name || process.env.BITBUCKET_BRANCH || "";
   const destBranch = pr?.destination?.branch?.name || config.destinationBranch;
 
-  const prompt = buildReviewPrompt({ title, sourceBranch, destBranch, diff });
+  const prompt = buildReviewPrompt({
+    title,
+    sourceBranch,
+    destBranch,
+    diff,
+    customPrompt: config.projectConfig?.review?.prompt,
+    projectName: config.projectConfig?.project?.name,
+    projectType: config.projectConfig?.project?.type,
+  });
 
   // 4. Run Claude with read-only tools (no editing)
   const result = await runClaude(config, prompt, TOOL_CONFIGS.readOnly);
