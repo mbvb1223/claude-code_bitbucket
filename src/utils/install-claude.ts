@@ -6,7 +6,7 @@
 import { execSync, spawn } from "child_process";
 import { homedir } from "os";
 import { join } from "path";
-import { logger } from "../logger";
+import { logger } from "./logger";
 
 /**
  * Check if Claude CLI is available

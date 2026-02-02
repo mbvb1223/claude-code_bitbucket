@@ -9,9 +9,9 @@
  * - tag: Respond to @claude mentions in comments (MODE=tag)
  */
 
-import { loadConfig, validateConfig } from "./config";
-import { BitbucketClient } from "./bitbucket";
-import { logger, setVerbose } from "./logger";
+import { loadConfig, validateConfig } from "./shared/config";
+import { BitbucketClient } from "./services/bitbucket";
+import { logger, setVerbose } from "./utils/logger";
 import { shouldRunReview, runReviewMode } from "./modes/review";
 import { shouldRunTag, runTagMode } from "./modes/tag";
 import { ensureClaudeCLI } from "./utils/install-claude";

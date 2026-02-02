@@ -2,8 +2,8 @@
  * Shared utilities for Claude usage logging
  */
 
-import type { ClaudeUsage } from "../claude";
-import { logger } from "../logger";
+import type { ClaudeUsage } from "../services/claude";
+import { logger } from "../utils/logger";
 
 /**
  * Log Claude API usage information

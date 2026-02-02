@@ -4,10 +4,10 @@
  * Can handle both informational requests and actionable requests
  */
 
-import type { Config } from "../config";
-import type { BitbucketClient, PRComment } from "../bitbucket";
-import { runClaude } from "../claude";
-import { logger } from "../logger";
+import type { Config } from "../shared/config";
+import type { BitbucketClient, PRComment } from "../services/bitbucket";
+import { runClaude } from "../services/claude";
+import { logger } from "../utils/logger";
 import {
   TOOL_CONFIGS,
   ACTIONABLE_PATTERNS,

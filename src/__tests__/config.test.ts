@@ -1,5 +1,5 @@
 import { describe, expect, test, beforeEach, afterEach } from "bun:test";
-import { loadConfig, validateConfig } from "../config";
+import { loadConfig, validateConfig } from "../shared/config";
 
 describe("loadConfig", () => {
   const originalEnv = { ...process.env };

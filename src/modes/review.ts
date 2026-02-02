@@ -4,10 +4,10 @@
  * No trigger phrase needed - runs on every PR
  */
 
-import type { Config } from "../config";
-import type { BitbucketClient, PullRequest } from "../bitbucket";
-import { runClaude } from "../claude";
-import { logger } from "../logger";
+import type { Config } from "../shared/config";
+import type { BitbucketClient, PullRequest } from "../services/bitbucket";
+import { runClaude } from "../services/claude";
+import { logger } from "../utils/logger";
 import { getLocalDiff, getChangedFiles } from "../utils/git";
 import { TOOL_CONFIGS, logClaudeUsage, type ReviewResult } from "../shared";
 import { buildReviewPrompt, formatReviewComment } from "../prompts";

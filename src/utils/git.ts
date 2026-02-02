@@ -4,7 +4,7 @@
  */
 
 import { execSync } from "child_process";
-import { logger } from "../logger";
+import { logger } from "./logger";
 
 /**
  * Get the repository directory
