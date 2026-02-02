@@ -13,6 +13,7 @@ import {
   ACTIONABLE_PATTERNS,
   INFORMATIONAL_PATTERNS,
   logClaudeUsage,
+  mergeToolConfig,
   type TagResult,
 } from "../shared";
 import { buildTagPrompt } from "../prompts";
@@ -83,12 +84,24 @@ export async function runTagMode(config: Config, client: BitbucketClient): Promi
       destBranch: config.destinationBranch,
       request: userRequest,
       inlineContext: triggerComment.inline,
+      customPrompt: config.projectConfig?.review?.prompt,
+      projectName: config.projectConfig?.project?.name,
+      projectType: config.projectConfig?.project?.type,
     },
     isActionable
   );
 
-  // 6. Run Claude with appropriate tools
-  const toolConfig = isActionable ? TOOL_CONFIGS.fullAccess : TOOL_CONFIGS.readOnly;
+  // 6. Run Claude with appropriate tools (merging project config if available)
+  const defaultToolConfig = isActionable ? TOOL_CONFIGS.fullAccess : TOOL_CONFIGS.readOnly;
+  const projectToolConfig = isActionable
+    ? config.projectConfig?.tools?.actionable
+    : config.projectConfig?.tools?.informational;
+  const toolConfig = mergeToolConfig(defaultToolConfig, projectToolConfig);
+
+  if (projectToolConfig) {
+    logger.debug(`Using project tool config: allowed=${toolConfig.allowedTools.join(",")}`);
+  }
+
   const result = await runClaude(config, prompt, toolConfig);
 
   if (!result.success) {

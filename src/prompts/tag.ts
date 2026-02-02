@@ -12,13 +12,25 @@ export interface TagPromptParams {
     from: number | null;
     to: number | null;
   };
+  customPrompt?: string;
+  projectName?: string;
+  projectType?: string;
 }
 
 /**
  * Build prompt for actionable requests (code changes)
  */
 export function buildActionablePrompt(params: TagPromptParams): string {
-  const { prId, sourceBranch, destBranch, request, inlineContext } = params;
+  const {
+    prId,
+    sourceBranch,
+    destBranch,
+    request,
+    inlineContext,
+    customPrompt,
+    projectName,
+    projectType,
+  } = params;
 
   const contextInfo = inlineContext
     ? `
@@ -28,16 +40,28 @@ Lines: ${inlineContext.from || "start"} - ${inlineContext.to || "end"}
 `
     : "";
 
+  const projectContext =
+    projectName || projectType
+      ? `**Project:** ${projectName || ""}${projectType ? ` (${projectType})` : ""}\n`
+      : "";
+
+  const customInstructions = customPrompt
+    ? `
+## Project Guidelines
+${customPrompt}
+`
+    : "";
+
   return `
 # Pull Request Task
 
 **PR #${prId}**
 **Branch:** ${sourceBranch} → ${destBranch}
-${contextInfo}
+${projectContext}${contextInfo}
 
 ## User Request
 ${request}
-
+${customInstructions}
 ## Instructions
 The user has requested a code change. You should:
 
@@ -53,7 +77,16 @@ Be concise in your response. Focus on completing the task.
  * Build prompt for informational requests (questions)
  */
 export function buildInformationalPrompt(params: TagPromptParams): string {
-  const { prId, sourceBranch, destBranch, request, inlineContext } = params;
+  const {
+    prId,
+    sourceBranch,
+    destBranch,
+    request,
+    inlineContext,
+    customPrompt,
+    projectName,
+    projectType,
+  } = params;
 
   const contextInfo = inlineContext
     ? `
@@ -63,16 +96,28 @@ Lines: ${inlineContext.from || "start"} - ${inlineContext.to || "end"}
 `
     : "";
 
+  const projectContext =
+    projectName || projectType
+      ? `**Project:** ${projectName || ""}${projectType ? ` (${projectType})` : ""}\n`
+      : "";
+
+  const customInstructions = customPrompt
+    ? `
+## Project Guidelines
+${customPrompt}
+`
+    : "";
+
   return `
 # Pull Request Question
 
 **PR #${prId}**
 **Branch:** ${sourceBranch} → ${destBranch}
-${contextInfo}
+${projectContext}${contextInfo}
 
 ## User Question
 ${request}
-
+${customInstructions}
 ## Instructions
 The user is asking a question. Provide a helpful, concise answer.
 

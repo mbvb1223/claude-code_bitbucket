@@ -2,6 +2,8 @@
  * Shared constants used across the application
  */
 
+import type { ToolConfig } from "../project-config";
+
 /** Maximum diff size in characters to send to Claude */
 export const MAX_DIFF_SIZE = 30_000;
 
@@ -28,8 +30,14 @@ export const BLOCKED_WRITE_TOOLS = ["Write", "Edit", "MultiEdit", "Bash"] as con
 /** Full access tools for actionable requests */
 export const FULL_ACCESS_TOOLS = ["Read", "Edit", "Write", "Grep", "Glob", "Bash"] as const;
 
+/** Tool configuration interface */
+export interface ToolConfigSet {
+  allowedTools: string[];
+  blockedTools: string[];
+}
+
 /** Tool configurations for different access levels */
-export const TOOL_CONFIGS = {
+export const TOOL_CONFIGS: { readOnly: ToolConfigSet; fullAccess: ToolConfigSet } = {
   readOnly: {
     allowedTools: [...READ_ONLY_TOOLS] as string[],
     blockedTools: [...BLOCKED_WRITE_TOOLS] as string[],
@@ -39,3 +47,25 @@ export const TOOL_CONFIGS = {
     blockedTools: [] as string[],
   },
 };
+
+/**
+ * Merge project tool config with default tool config
+ * Project config takes precedence when specified
+ */
+export function mergeToolConfig(
+  defaultConfig: ToolConfigSet,
+  projectConfig?: ToolConfig
+): ToolConfigSet {
+  if (!projectConfig) {
+    return defaultConfig;
+  }
+
+  return {
+    allowedTools: projectConfig.allowed?.length
+      ? projectConfig.allowed
+      : defaultConfig.allowedTools,
+    blockedTools: projectConfig.blocked?.length
+      ? projectConfig.blocked
+      : defaultConfig.blockedTools,
+  };
+}

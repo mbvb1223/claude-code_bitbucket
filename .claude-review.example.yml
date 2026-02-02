@@ -1,0 +1,75 @@
+# .claude-review.yml - Project-level configuration for Claude PR Review
+#
+# This file allows you to customize how Claude reviews your pull requests.
+# Copy this to `.claude-review.yml` in your repository root and modify as needed.
+
+# Project metadata (optional)
+project:
+  name: "My Symfony App"
+  type: "symfony"  # symfony, laravel, php, generic, or any custom string
+
+# Review configuration
+review:
+  # Custom review prompt - Claude will use this instead of the default
+  # You can focus the review on project-specific concerns
+  prompt: |
+    Focus on:
+    - Symfony best practices (DI, services, controllers)
+    - Doctrine ORM usage and N+1 queries
+    - Security: CSRF, input validation, SQL injection
+    - PSR-12 compliance
+
+  # Files to exclude from review (glob patterns)
+  # These files will not appear in the diff sent to Claude
+  exclude:
+    - "vendor/**"
+    - "var/**"
+    - "*.lock"
+    - "migrations/**"
+    - "node_modules/**"
+    - "dist/**"
+    - "*.min.js"
+    - "*.min.css"
+
+  # Files to include in review (glob patterns)
+  # If specified, ONLY these files will be reviewed
+  # If not specified, all files (except excluded) are reviewed
+  include:
+    - "src/**"
+    - "config/**"
+    - "templates/**"
+    - "tests/**"
+
+# Tool restrictions (optional)
+# Control which Claude tools can be used in different modes
+tools:
+  # For actionable requests (code changes via @claude)
+  actionable:
+    allowed:
+      - Read
+      - Edit
+      - Write
+      - Grep
+      - Glob
+      - Bash
+    blocked: []
+
+  # For informational requests (questions/reviews)
+  informational:
+    allowed:
+      - Read
+      - Grep
+      - Glob
+    blocked:
+      - Edit
+      - Write
+      - Bash
+
+# Custom trigger phrase (optional)
+# Default: @claude
+trigger: "@claude"
+
+# Model override (optional)
+# Options: haiku, sonnet, opus
+# Default: haiku (from env var MODEL)
+model: "sonnet"
