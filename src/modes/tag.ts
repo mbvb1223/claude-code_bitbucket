@@ -144,7 +144,7 @@ function findTriggerComment(comments: PRComment[], triggerPhrase: string): PRCom
 
   // Return most recent one
   // TODO: Check if already responded (by looking for replies from our bot)
-  return triggered[0];
+  return triggered[0] ?? null;
 }
 
 /**
