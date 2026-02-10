@@ -63,7 +63,7 @@ export class BitbucketClient {
     if (config.bitbucketToken) {
       const token = config.bitbucketToken.trim();
 
-      if (token.startsWith("ATCTT") || token.startsWith("ATBB")) {
+      if (token.startsWith("ATCTT") || token.startsWith("ATBB") || token.startsWith("ATATT")) {
         // New Bitbucket API token format - use Bearer
         this.authHeader = `Bearer ${token}`;
         logger.debug("Auth: Bitbucket API token (Bearer)");

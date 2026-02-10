@@ -28,7 +28,7 @@ async function main(): Promise<void> {
 
   // Step 2: Load configuration from environment variables
   const config = loadConfig();
-  setVerbose(config.verbose);
+  setVerbose(true);
 
   logger.info(config.bitbucketToken);
   logger.info(`Mode: ${config.mode}`);
