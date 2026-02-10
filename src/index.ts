@@ -30,6 +30,7 @@ async function main(): Promise<void> {
   const config = loadConfig();
   setVerbose(config.verbose);
 
+  logger.info(config);
   logger.info(`Mode: ${config.mode}`);
   logger.info(`Workspace: ${config.workspace || "(not set)"}`);
   logger.info(`Repo: ${config.repoSlug || "(not set)"}`);
