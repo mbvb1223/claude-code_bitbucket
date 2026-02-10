@@ -36,6 +36,7 @@ async function main(): Promise<void> {
   logger.info(`Repo: ${config.repoSlug || "(not set)"}`);
   logger.info(`PR ID: ${config.prId || "(not set)"}`);
   logger.info(`Trigger: ${config.triggerPhrase}`);
+  logger.info(`Model: ${config.model}`);
 
   // Step 3: Validate required configuration
   const errors = validateConfig(config);
